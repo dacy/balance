@@ -18,7 +18,7 @@ struct FamilyMemberCard: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text(member.relationship.emoji)
+                    Text(member.emoji)
                         .font(.system(size: 38))
                     Text("Age \(member.ageInYears)")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -62,16 +62,14 @@ struct LifeProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // Remaining portion — lighter card color so it reads as "time still ahead"
                 Capsule()
-                    .fill(colors[1].opacity(0.55))
-                    .frame(height: 8)
-                // Lived portion — solid accent color
+                    .fill(Color.black.opacity(0.18))
+                    .frame(height: 10)
                 Capsule()
-                    .fill(colors[0].opacity(0.88))
-                    .frame(width: max(8, geo.size.width * fraction), height: 8)
+                    .fill(Color.white.opacity(0.92))
+                    .frame(width: max(10, geo.size.width * fraction), height: 10)
             }
         }
-        .frame(height: 8)
+        .frame(height: 10)
     }
 }

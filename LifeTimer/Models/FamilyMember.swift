@@ -1,6 +1,12 @@
 import SwiftUI
 import Foundation
 
+enum Gender: String, Codable, CaseIterable {
+    case male = "Male"
+    case female = "Female"
+    case other = "Non-binary / Other"
+}
+
 enum RelationshipType: String, Codable, CaseIterable {
     case myself = "Yourself"
     case child = "Child"
@@ -9,18 +15,6 @@ enum RelationshipType: String, Codable, CaseIterable {
     case partner = "Partner"
     case sibling = "Sibling"
     case friend = "Close Friend"
-
-    var emoji: String {
-        switch self {
-        case .myself: return "⏳"
-        case .child: return "🧒"
-        case .parent: return "🧑"
-        case .grandparent: return "👴"
-        case .partner: return "💑"
-        case .sibling: return "🤝"
-        case .friend: return "🫂"
-        }
-    }
 
     var defaultLifeExpectancy: Int {
         switch self {
@@ -102,6 +96,7 @@ struct FamilyMember: Identifiable, Codable {
     var lifeExpectancy: Int
     var leavesHomeAtAge: Int?
     var note: String
+    var gender: Gender
 
     init(
         id: UUID = UUID(),
@@ -111,7 +106,8 @@ struct FamilyMember: Identifiable, Codable {
         visitFrequency: VisitFrequency = .monthly,
         lifeExpectancy: Int? = nil,
         leavesHomeAtAge: Int? = nil,
-        note: String = ""
+        note: String = "",
+        gender: Gender = .other
     ) {
         self.id = id
         self.name = name
@@ -121,6 +117,59 @@ struct FamilyMember: Identifiable, Codable {
         self.lifeExpectancy = lifeExpectancy ?? relationship.defaultLifeExpectancy
         self.leavesHomeAtAge = leavesHomeAtAge
         self.note = note
+        self.gender = gender
+    }
+
+    // Custom decoder for backward compatibility — gender defaults to .other for old saves
+    enum CodingKeys: CodingKey {
+        case id, name, birthDate, relationship, visitFrequency, lifeExpectancy, leavesHomeAtAge, note, gender
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        birthDate = try c.decode(Date.self, forKey: .birthDate)
+        relationship = try c.decode(RelationshipType.self, forKey: .relationship)
+        visitFrequency = try c.decode(VisitFrequency.self, forKey: .visitFrequency)
+        lifeExpectancy = try c.decode(Int.self, forKey: .lifeExpectancy)
+        leavesHomeAtAge = try c.decodeIfPresent(Int.self, forKey: .leavesHomeAtAge)
+        note = try c.decode(String.self, forKey: .note)
+        gender = try c.decodeIfPresent(Gender.self, forKey: .gender) ?? .other
+    }
+
+    var emoji: String {
+        switch relationship {
+        case .myself: return "⏳"
+        case .child:
+            switch gender {
+            case .male: return "👦"
+            case .female: return "👧"
+            case .other: return "🧒"
+            }
+        case .parent:
+            switch gender {
+            case .male: return "👨"
+            case .female: return "👩"
+            case .other: return "🧑"
+            }
+        case .grandparent:
+            switch gender {
+            case .male: return "👴"
+            case .female: return "👵"
+            case .other: return "🧓"
+            }
+        case .partner:
+            return "💞"
+        case .sibling:
+            switch gender {
+            case .male: return "👦"
+            case .female: return "👧"
+            case .other: return "🤝"
+            }
+        case .friend:
+            return "🫂"
+        }
     }
 
     var ageInYears: Int {

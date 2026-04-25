@@ -14,6 +14,7 @@ struct AddFamilyMemberView: View {
     @State private var leavesHomeAtAge: Int = 18
     @State private var includeLeavesHomeAge: Bool = false
     @State private var note: String = ""
+    @State private var gender: Gender = .other
 
     init(existingMember: FamilyMember? = nil, initialRelationship: RelationshipType = .parent) {
         self.existingMember = existingMember
@@ -22,6 +23,7 @@ struct AddFamilyMemberView: View {
         let defaultAge = rel == .myself ? -35 : -40
         _birthDate = State(initialValue: Calendar.current.date(byAdding: .year, value: defaultAge, to: Date()) ?? Date())
         _name = State(initialValue: "")
+        _gender = State(initialValue: existingMember?.gender ?? .other)
     }
 
     var isEditing: Bool { existingMember != nil }
@@ -36,6 +38,11 @@ struct AddFamilyMemberView: View {
                         Picker("Relationship", selection: $relationship) {
                             ForEach(RelationshipType.allCases.filter { $0 != .myself }, id: \.self) { rel in
                                 Text(rel.rawValue).tag(rel)
+                            }
+                        }
+                        Picker("Gender", selection: $gender) {
+                            ForEach(Gender.allCases, id: \.self) { g in
+                                Text(g.rawValue).tag(g)
                             }
                         }
                     }
@@ -116,6 +123,7 @@ struct AddFamilyMemberView: View {
             leavesHomeAtAge = leavesAt
             includeLeavesHomeAge = true
         }
+        gender = member.gender
     }
 
     private func save() {
@@ -132,6 +140,7 @@ struct AddFamilyMemberView: View {
             member.lifeExpectancy = lifeExpectancy
             member.leavesHomeAtAge = leavesAt
             member.note = note
+            member.gender = gender
             store.update(member)
         } else {
             store.add(FamilyMember(
@@ -141,7 +150,8 @@ struct AddFamilyMemberView: View {
                 visitFrequency: visitFrequency,
                 lifeExpectancy: lifeExpectancy,
                 leavesHomeAtAge: leavesAt,
-                note: note
+                note: note,
+                gender: gender
             ))
         }
         dismiss()

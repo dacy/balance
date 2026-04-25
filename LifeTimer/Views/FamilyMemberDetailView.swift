@@ -49,7 +49,7 @@ struct FamilyMemberDetailView: View {
                 .padding(.top, 56)
 
                 VStack(spacing: 10) {
-                    Text(member.relationship.emoji)
+                    Text(member.emoji)
                         .font(.system(size: 72))
                     Text(member.name)
                         .font(.system(size: 34, weight: .bold, design: .rounded))

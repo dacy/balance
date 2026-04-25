@@ -5,6 +5,7 @@ struct HomeView: View {
     @State private var showingAddMember = false
     @State private var showingAddSelf = false
     @State private var selectedMember: FamilyMember?
+    @State private var editMode: EditMode = .inactive
 
     private var selfMember: FamilyMember? {
         store.members.first { $0.relationship == .myself }
@@ -17,20 +18,21 @@ struct HomeView: View {
         NavigationStack {
             ZStack {
                 pageBackground
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        header
-                        selfSection
-                        if !familyMembers.isEmpty {
-                            familySection
-                        } else if selfMember != nil {
-                            addFamilyPrompt
-                        }
-                        if store.members.isEmpty {
-                            emptyState
-                        }
+                List {
+                    headerRow
+                    selfSection
+                    if !familyMembers.isEmpty {
+                        familySection
+                    } else if selfMember != nil {
+                        addFamilyPromptRow
+                    }
+                    if store.members.isEmpty {
+                        emptyStateRows
                     }
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .environment(\.editMode, $editMode)
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showingAddMember) {
@@ -54,10 +56,10 @@ struct HomeView: View {
         .ignoresSafeArea()
     }
 
-    private var header: some View {
+    private var headerRow: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Time With")
+                Text("Balance")
                     .font(.system(size: 38, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
@@ -83,28 +85,60 @@ struct HomeView: View {
                     )
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 60)
-        .padding(.bottom, 20)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 60, leading: 24, bottom: 20, trailing: 24))
     }
 
     private var selfSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        Section {
+            Group {
+                if let self_ = selfMember {
+                    FamilyMemberCard(member: self_)
+                        .onTapGesture { selectedMember = self_ }
+                } else {
+                    addSelfCard
+                }
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 8, trailing: 20))
+        } header: {
             Text("YOUR TIMER")
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundColor(.secondary)
-                .padding(.horizontal, 24)
-
-            if let self_ = selfMember {
-                FamilyMemberCard(member: self_)
-                    .padding(.horizontal, 20)
-                    .onTapGesture { selectedMember = self_ }
-            } else {
-                addSelfCard
-                    .padding(.horizontal, 20)
-            }
+                .textCase(nil)
+                .padding(.leading, 4)
         }
-        .padding(.bottom, 24)
+    }
+
+    private var familySection: some View {
+        Section {
+            ForEach(familyMembers) { member in
+                FamilyMemberCard(member: member)
+                    .onTapGesture {
+                        guard editMode == .inactive else { return }
+                        selectedMember = member
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 8, trailing: 20))
+            }
+            .onMove { store.reorderFamilyMembers(fromOffsets: $0, toOffset: $1) }
+        } header: {
+            HStack {
+                Text("YOUR PEOPLE")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(.secondary)
+                    .textCase(nil)
+                Spacer()
+                Button(editMode == .active ? "Done" : "Reorder") {
+                    withAnimation { editMode = editMode == .active ? .inactive : .active }
+                }
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+            }
+            .padding(.leading, 4)
+        }
     }
 
     private var addSelfCard: some View {
@@ -142,28 +176,10 @@ struct HomeView: View {
         .buttonStyle(.plain)
     }
 
-    private var familySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("YOUR PEOPLE")
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 24)
-
-            LazyVStack(spacing: 18) {
-                ForEach(familyMembers) { member in
-                    FamilyMemberCard(member: member)
-                        .onTapGesture { selectedMember = member }
-                }
-            }
-            .padding(.horizontal, 20)
-        }
-        .padding(.bottom, 40)
-    }
-
-    private var addFamilyPrompt: some View {
+    private var addFamilyPromptRow: some View {
         Button { showingAddMember = true } label: {
             HStack(spacing: 12) {
-                Image(systemName: "person.badge.plus")
+                Image(systemName: "person.2.badge.plus")
                     .font(.system(size: 22))
                     .foregroundColor(.secondary)
                 Text("Add a family member or friend")
@@ -173,11 +189,12 @@ struct HomeView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 40)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 0, leading: 24, bottom: 40, trailing: 24))
     }
 
-    private var emptyState: some View {
+    private var emptyStateRows: some View {
         VStack(spacing: 20) {
             Spacer(minLength: 60)
             Text("🌟")
@@ -192,7 +209,7 @@ struct HomeView: View {
                 Text("Get Started")
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 36)
+                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(
                         LinearGradient(
@@ -202,9 +219,11 @@ struct HomeView: View {
                     )
                     .cornerRadius(16)
             }
-            Spacer(minLength: 60)
+            .padding(.horizontal, 40)
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, 24)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 40, trailing: 20))
     }
 }

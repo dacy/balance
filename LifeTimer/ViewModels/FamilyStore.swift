@@ -1,10 +1,14 @@
 import Foundation
 import Combine
+import WidgetKit
+
+private let appGroupID = "group.com.chun.LifeTimer"
 
 class FamilyStore: ObservableObject {
     @Published var members: [FamilyMember] = []
 
     private let saveKey = "family_members_v1"
+    private var sharedDefaults: UserDefaults { UserDefaults(suiteName: appGroupID) ?? .standard }
 
     init() {
         load()
@@ -34,13 +38,27 @@ class FamilyStore: ObservableObject {
         save()
     }
 
+    func reorderFamilyMembers(fromOffsets source: IndexSet, toOffset destination: Int) {
+        let myself = members.filter { $0.relationship == .myself }
+        var family = members.filter { $0.relationship != .myself }
+        family.move(fromOffsets: source, toOffset: destination)
+        members = myself + family
+        save()
+    }
+
     private func save() {
         guard let data = try? JSONEncoder().encode(members) else { return }
-        UserDefaults.standard.set(data, forKey: saveKey)
+        sharedDefaults.set(data, forKey: saveKey)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func load() {
-        guard let data = UserDefaults.standard.data(forKey: saveKey),
+        // Migrate from standard UserDefaults to shared App Group defaults if needed
+        if let old = UserDefaults.standard.data(forKey: saveKey),
+           sharedDefaults.data(forKey: saveKey) == nil {
+            sharedDefaults.set(old, forKey: saveKey)
+        }
+        guard let data = sharedDefaults.data(forKey: saveKey),
               let saved = try? JSONDecoder().decode([FamilyMember].self, from: data)
         else { return }
         members = saved
@@ -56,7 +74,8 @@ class FamilyStore: ObservableObject {
             relationship: .child,
             visitFrequency: .livingTogether,
             leavesHomeAtAge: 18,
-            note: "Loves painting and stories before bed."
+            note: "Loves painting and stories before bed.",
+            gender: .female
         )
 
         let parentBirth = calendar.date(byAdding: .year, value: -65, to: Date()) ?? Date()
@@ -65,7 +84,8 @@ class FamilyStore: ObservableObject {
             birthDate: parentBirth,
             relationship: .parent,
             visitFrequency: .monthly,
-            note: "Sunday calls and holiday visits mean the world."
+            note: "Sunday calls and holiday visits mean the world.",
+            gender: .female
         )
 
         members = [child, parent]
