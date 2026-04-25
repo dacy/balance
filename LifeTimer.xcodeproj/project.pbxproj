@@ -15,6 +15,7 @@
 		AA0000000000000000000025 /* FamilyMemberCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* FamilyMemberCard.swift */; };
 		AA0000000000000000000027 /* FamilyMemberDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* FamilyMemberDetailView.swift */; };
 		AA0000000000000000000029 /* AddFamilyMemberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000028 /* AddFamilyMemberView.swift */; };
+		AA0000000000000000000051 /* LifeInWeeksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000050 /* LifeInWeeksView.swift */; };
 		AA000000000000000000002B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* Assets.xcassets */; };
 		AA000000000000000000002D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002C /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -29,6 +30,7 @@
 		AA0000000000000000000024 /* FamilyMemberCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberCard.swift; sourceTree = "<group>"; };
 		AA0000000000000000000026 /* FamilyMemberDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberDetailView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000028 /* AddFamilyMemberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFamilyMemberView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000050 /* LifeInWeeksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeInWeeksView.swift; sourceTree = "<group>"; };
 		AA000000000000000000002A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA000000000000000000002C /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -97,6 +99,7 @@
 				AA0000000000000000000024 /* FamilyMemberCard.swift */,
 				AA0000000000000000000026 /* FamilyMemberDetailView.swift */,
 				AA0000000000000000000028 /* AddFamilyMemberView.swift */,
+				AA0000000000000000000050 /* LifeInWeeksView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -187,6 +190,7 @@
 				AA0000000000000000000025 /* FamilyMemberCard.swift in Sources */,
 				AA0000000000000000000027 /* FamilyMemberDetailView.swift in Sources */,
 				AA0000000000000000000029 /* AddFamilyMemberView.swift in Sources */,
+				AA0000000000000000000051 /* LifeInWeeksView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

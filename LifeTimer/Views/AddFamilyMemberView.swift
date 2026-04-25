@@ -6,17 +6,22 @@ struct AddFamilyMemberView: View {
 
     let existingMember: FamilyMember?
 
-    @State private var name: String = ""
-    @State private var birthDate: Date = Calendar.current.date(byAdding: .year, value: -40, to: Date()) ?? Date()
-    @State private var relationship: RelationshipType = .parent
+    @State private var name: String
+    @State private var birthDate: Date
+    @State private var relationship: RelationshipType
     @State private var visitFrequency: VisitFrequency = .monthly
     @State private var lifeExpectancy: Int = 80
     @State private var leavesHomeAtAge: Int = 18
     @State private var includeLeavesHomeAge: Bool = false
     @State private var note: String = ""
 
-    init(existingMember: FamilyMember? = nil) {
+    init(existingMember: FamilyMember? = nil, initialRelationship: RelationshipType = .parent) {
         self.existingMember = existingMember
+        let rel = existingMember?.relationship ?? initialRelationship
+        _relationship = State(initialValue: rel)
+        let defaultAge = rel == .myself ? -35 : -40
+        _birthDate = State(initialValue: Calendar.current.date(byAdding: .year, value: defaultAge, to: Date()) ?? Date())
+        _name = State(initialValue: "")
     }
 
     var isEditing: Bool { existingMember != nil }
@@ -24,24 +29,28 @@ struct AddFamilyMemberView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("About them") {
-                    TextField("Name", text: $name)
+                Section(relationship == .myself ? "About you" : "About them") {
+                    TextField(relationship == .myself ? "Your name" : "Name", text: $name)
                     DatePicker("Birthday", selection: $birthDate, in: ...Date(), displayedComponents: .date)
-                    Picker("Relationship", selection: $relationship) {
-                        ForEach(RelationshipType.allCases, id: \.self) { rel in
-                            Text(rel.rawValue).tag(rel)
+                    if relationship != .myself {
+                        Picker("Relationship", selection: $relationship) {
+                            ForEach(RelationshipType.allCases.filter { $0 != .myself }, id: \.self) { rel in
+                                Text(rel.rawValue).tag(rel)
+                            }
                         }
                     }
                 }
 
-                Section("How often do you see them?") {
-                    Picker("Frequency", selection: $visitFrequency) {
-                        ForEach(VisitFrequency.allCases, id: \.self) { freq in
-                            Text(freq.rawValue).tag(freq)
+                if relationship != .myself {
+                    Section("How often do you see them?") {
+                        Picker("Frequency", selection: $visitFrequency) {
+                            ForEach(VisitFrequency.allCases, id: \.self) { freq in
+                                Text(freq.rawValue).tag(freq)
+                            }
                         }
+                        .pickerStyle(.inline)
+                        .labelsHidden()
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
                 }
 
                 if relationship == .child {
@@ -88,6 +97,8 @@ struct AddFamilyMemberView: View {
                 if newValue == .child {
                     visitFrequency = .livingTogether
                     includeLeavesHomeAge = true
+                } else if newValue == .myself {
+                    visitFrequency = .livingTogether
                 }
             }
         }
