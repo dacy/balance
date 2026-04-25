@@ -27,7 +27,7 @@ struct FamilyMemberCard: View {
             }
             .padding(.bottom, 16)
 
-            LifeProgressBar(fraction: member.lifeFractionElapsed, fillColor: colors[0])
+            LifeProgressBar(fraction: member.lifeFractionElapsed, colors: colors)
                 .padding(.bottom, 18)
 
             HStack(alignment: .bottom) {
@@ -57,19 +57,21 @@ struct FamilyMemberCard: View {
 
 struct LifeProgressBar: View {
     let fraction: Double
-    let fillColor: Color
+    let colors: [Color]
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
+                // Remaining portion — lighter card color so it reads as "time still ahead"
                 Capsule()
-                    .fill(Color.black.opacity(0.08))
-                    .frame(height: 6)
+                    .fill(colors[1].opacity(0.55))
+                    .frame(height: 8)
+                // Lived portion — solid accent color
                 Capsule()
-                    .fill(fillColor.opacity(0.85))
-                    .frame(width: max(6, geo.size.width * fraction), height: 6)
+                    .fill(colors[0].opacity(0.88))
+                    .frame(width: max(8, geo.size.width * fraction), height: 8)
             }
         }
-        .frame(height: 6)
+        .frame(height: 8)
     }
 }

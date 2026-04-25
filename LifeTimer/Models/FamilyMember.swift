@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 
 enum RelationshipType: String, Codable, CaseIterable {
+    case myself = "Yourself"
     case child = "Child"
     case parent = "Parent"
     case grandparent = "Grandparent"
@@ -11,6 +12,7 @@ enum RelationshipType: String, Codable, CaseIterable {
 
     var emoji: String {
         switch self {
+        case .myself: return "⏳"
         case .child: return "🧒"
         case .parent: return "🧑"
         case .grandparent: return "👴"
@@ -29,6 +31,8 @@ enum RelationshipType: String, Codable, CaseIterable {
 
     var cardColors: [Color] {
         switch self {
+        case .myself:
+            return [Color(red: 0.36, green: 0.46, blue: 0.90), Color(red: 0.68, green: 0.76, blue: 0.98)]
         case .child:
             return [Color(red: 1.00, green: 0.78, blue: 0.45), Color(red: 1.00, green: 0.92, blue: 0.72)]
         case .parent:
@@ -46,6 +50,8 @@ enum RelationshipType: String, Codable, CaseIterable {
 
     var inspirationalQuote: String {
         switch self {
+        case .myself:
+            return "You have one life. Make it matter — not perfectly, just fully."
         case .child:
             return "The days are long, but the years are short. Hold them a little tighter today."
         case .parent:
@@ -130,7 +136,13 @@ struct FamilyMember: Identifiable, Codable {
         max(0, Double(lifeExpectancy) - ageInYearsDouble)
     }
 
+    var weeksLived: Int { Int(ageInYearsDouble * 52) }
+    var weeksRemaining: Int { max(0, lifeExpectancy * 52 - weeksLived) }
+
     var remainingMoments: Int {
+        if relationship == .myself {
+            return weeksRemaining
+        }
         if relationship == .child, let leavesAt = leavesHomeAtAge {
             let yearsAtHome = max(0.0, Double(leavesAt) - ageInYearsDouble)
             return Int(yearsAtHome * 52)
@@ -139,6 +151,9 @@ struct FamilyMember: Identifiable, Codable {
     }
 
     var remainingMomentsLabel: String {
+        if relationship == .myself {
+            return "weeks remaining in your life"
+        }
         if relationship == .child, leavesHomeAtAge != nil {
             return "weekends left at home"
         }

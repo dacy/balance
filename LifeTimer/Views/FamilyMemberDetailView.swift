@@ -5,6 +5,7 @@ struct FamilyMemberDetailView: View {
     @EnvironmentObject var store: FamilyStore
     let initialMember: FamilyMember
     @State private var showingEdit = false
+    @State private var showingLifeInWeeks = false
 
     private var member: FamilyMember {
         store.members.first(where: { $0.id == initialMember.id }) ?? initialMember
@@ -23,6 +24,9 @@ struct FamilyMemberDetailView: View {
         .ignoresSafeArea(edges: .top)
         .sheet(isPresented: $showingEdit) {
             AddFamilyMemberView(existingMember: member)
+        }
+        .sheet(isPresented: $showingLifeInWeeks) {
+            LifeInWeeksView(member: member)
         }
     }
 
@@ -69,7 +73,7 @@ struct FamilyMemberDetailView: View {
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundColor(.secondary)
                     }
-                    LifeProgressBar(fraction: member.lifeFractionElapsed, fillColor: colors[0])
+                    LifeProgressBar(fraction: member.lifeFractionElapsed, colors: colors)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
@@ -80,6 +84,7 @@ struct FamilyMemberDetailView: View {
     private var statsSection: some View {
         VStack(spacing: 16) {
             mainStatCard
+            lifeInWeeksButton
             secondaryStatsGrid
             if !member.note.isEmpty { noteCard }
             quoteCard
@@ -103,10 +108,39 @@ struct FamilyMemberDetailView: View {
         .background(RoundedRectangle(cornerRadius: 18).fill(colors[1].opacity(0.35)))
     }
 
+    private var lifeInWeeksButton: some View {
+        Button { showingLifeInWeeks = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "squareshape.split.3x3")
+                    .font(.system(size: 20))
+                    .foregroundStyle(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("View Life in Weeks")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Text("Every box is one week of life")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.secondary)
+            }
+            .padding(16)
+            .background(RoundedRectangle(cornerRadius: 16).fill(colors[1].opacity(0.3)))
+        }
+        .buttonStyle(.plain)
+    }
+
     private var secondaryStatsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
             StatCard(icon: "hourglass", label: "Years remaining", value: String(format: "~%.0f", member.remainingYears), subtitle: "estimated")
-            StatCard(icon: "calendar.badge.clock", label: "See them", value: member.visitFrequency.rawValue, isText: true)
+            if member.relationship == .myself {
+                StatCard(icon: "calendar", label: "Weeks lived", value: "\(member.weeksLived)", subtitle: "so far")
+            } else {
+                StatCard(icon: "calendar.badge.clock", label: "See them", value: member.visitFrequency.rawValue, isText: true)
+            }
             if member.relationship == .child, let leavesAt = member.leavesHomeAtAge {
                 let yearsLeft = max(0, leavesAt - member.ageInYears)
                 StatCard(icon: "house.fill", label: "At home", value: "\(yearsLeft)", subtitle: "more years")
