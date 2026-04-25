@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Shared constants
 
-private let appGroupID = "group.com.chun.LifeTimer"
+private let appGroupID = "group.com.stageX.balance"
 private let membersKey = "family_members_v1"
 
 // MARK: - Timeline Entry

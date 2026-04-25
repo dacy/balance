@@ -2,7 +2,7 @@ import Foundation
 import Combine
 import WidgetKit
 
-private let appGroupID = "group.com.chun.LifeTimer"
+private let appGroupID = "group.com.stageX.balance"
 
 class FamilyStore: ObservableObject {
     @Published var members: [FamilyMember] = []
