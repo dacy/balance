@@ -10,8 +10,11 @@ struct HomeView: View {
     private var selfMember: FamilyMember? {
         store.members.first { $0.relationship == .myself }
     }
+    private var petMembers: [FamilyMember] {
+        store.members.filter { $0.relationship == .pet }
+    }
     private var familyMembers: [FamilyMember] {
-        store.members.filter { $0.relationship != .myself }
+        store.members.filter { $0.relationship != .myself && $0.relationship != .pet }
     }
 
     var body: some View {
@@ -21,6 +24,7 @@ struct HomeView: View {
                 List {
                     headerRow
                     selfSection
+                    if !petMembers.isEmpty { petsSection }
                     if !familyMembers.isEmpty {
                         familySection
                     } else if selfMember != nil {
@@ -105,6 +109,24 @@ struct HomeView: View {
             .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 8, trailing: 20))
         } header: {
             Text("YOUR TIMER")
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundColor(.secondary)
+                .textCase(nil)
+                .padding(.leading, 4)
+        }
+    }
+
+    private var petsSection: some View {
+        Section {
+            ForEach(petMembers) { member in
+                FamilyMemberCard(member: member)
+                    .onTapGesture { selectedMember = member }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 8, trailing: 20))
+            }
+        } header: {
+            Text("YOUR PETS")
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundColor(.secondary)
                 .textCase(nil)
