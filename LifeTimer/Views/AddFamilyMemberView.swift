@@ -106,7 +106,7 @@ struct AddFamilyMemberView: View {
         Section("Type of pet") {
             Picker("Species", selection: $petType) {
                 ForEach(PetType.allCases, id: \.self) { pt in
-                    Label(pt.rawValue, title: { Text(pt.rawValue) })
+                    Text(pt.rawValue)
                         .tag(pt)
                 }
             }
