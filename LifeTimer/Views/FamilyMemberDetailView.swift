@@ -138,6 +138,8 @@ struct FamilyMemberDetailView: View {
             StatCard(icon: "hourglass", label: "Years remaining", value: String(format: "~%.0f", member.remainingYears), subtitle: "estimated")
             if member.relationship == .myself {
                 StatCard(icon: "calendar", label: "Weeks lived", value: "\(member.weeksLived)", subtitle: "so far")
+            } else if member.relationship == .pet {
+                StatCard(icon: "pawprint.fill", label: "Species", value: member.petType?.rawValue ?? "Pet", isText: true)
             } else {
                 StatCard(icon: "calendar.badge.clock", label: "See them", value: member.visitFrequency.rawValue, isText: true)
             }

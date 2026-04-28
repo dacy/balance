@@ -7,6 +7,50 @@ enum Gender: String, Codable, CaseIterable {
     case other = "Non-binary / Other"
 }
 
+enum PetType: String, Codable, CaseIterable {
+    case dog = "Dog"
+    case cat = "Cat"
+    case rabbit = "Rabbit"
+    case bird = "Bird"
+    case hamster = "Hamster"
+    case guineaPig = "Guinea Pig"
+    case fish = "Fish"
+    case horse = "Horse"
+    case turtle = "Turtle"
+    case other = "Other"
+
+    var emoji: String {
+        switch self {
+        case .dog: return "🐕"
+        case .cat: return "🐈"
+        case .rabbit: return "🐇"
+        case .bird: return "🦜"
+        case .hamster: return "🐹"
+        case .guineaPig: return "🐾"
+        case .fish: return "🐠"
+        case .horse: return "🐎"
+        case .turtle: return "🐢"
+        case .other: return "🐾"
+        }
+    }
+
+    // Typical median lifespan in years
+    var defaultLifeExpectancy: Int {
+        switch self {
+        case .dog: return 13
+        case .cat: return 15
+        case .rabbit: return 10
+        case .bird: return 15
+        case .hamster: return 2
+        case .guineaPig: return 5
+        case .fish: return 5
+        case .horse: return 28
+        case .turtle: return 40
+        case .other: return 12
+        }
+    }
+}
+
 enum RelationshipType: String, Codable, CaseIterable {
     case myself = "Yourself"
     case child = "Child"
@@ -15,10 +59,12 @@ enum RelationshipType: String, Codable, CaseIterable {
     case partner = "Partner"
     case sibling = "Sibling"
     case friend = "Close Friend"
+    case pet = "Pet"
 
     var defaultLifeExpectancy: Int {
         switch self {
         case .grandparent: return 85
+        case .pet: return 13
         default: return 80
         }
     }
@@ -39,6 +85,8 @@ enum RelationshipType: String, Codable, CaseIterable {
             return [Color(red: 0.45, green: 0.86, blue: 0.74), Color(red: 0.76, green: 0.97, blue: 0.88)]
         case .friend:
             return [Color(red: 0.94, green: 0.86, blue: 0.48), Color(red: 1.00, green: 0.97, blue: 0.76)]
+        case .pet:
+            return [Color(red: 0.44, green: 0.72, blue: 0.50), Color(red: 0.74, green: 0.92, blue: 0.76)]
         }
     }
 
@@ -58,6 +106,8 @@ enum RelationshipType: String, Codable, CaseIterable {
             return "No one else will ever know the history you share."
         case .friend:
             return "True friendship is rare. Tend to it often."
+        case .pet:
+            return "They love you unconditionally and ask for so little. Be present with them."
         }
     }
 }
@@ -97,6 +147,7 @@ struct FamilyMember: Identifiable, Codable {
     var leavesHomeAtAge: Int?
     var note: String
     var gender: Gender
+    var petType: PetType?
 
     init(
         id: UUID = UUID(),
@@ -107,22 +158,24 @@ struct FamilyMember: Identifiable, Codable {
         lifeExpectancy: Int? = nil,
         leavesHomeAtAge: Int? = nil,
         note: String = "",
-        gender: Gender = .other
+        gender: Gender = .other,
+        petType: PetType? = nil
     ) {
         self.id = id
         self.name = name
         self.birthDate = birthDate
         self.relationship = relationship
         self.visitFrequency = visitFrequency
-        self.lifeExpectancy = lifeExpectancy ?? relationship.defaultLifeExpectancy
+        self.lifeExpectancy = lifeExpectancy ?? (petType?.defaultLifeExpectancy ?? relationship.defaultLifeExpectancy)
         self.leavesHomeAtAge = leavesHomeAtAge
         self.note = note
         self.gender = gender
+        self.petType = petType
     }
 
-    // Custom decoder for backward compatibility — gender defaults to .other for old saves
+    // Custom decoder for backward compatibility
     enum CodingKeys: CodingKey {
-        case id, name, birthDate, relationship, visitFrequency, lifeExpectancy, leavesHomeAtAge, note, gender
+        case id, name, birthDate, relationship, visitFrequency, lifeExpectancy, leavesHomeAtAge, note, gender, petType
     }
 
     init(from decoder: Decoder) throws {
@@ -136,11 +189,13 @@ struct FamilyMember: Identifiable, Codable {
         leavesHomeAtAge = try c.decodeIfPresent(Int.self, forKey: .leavesHomeAtAge)
         note = try c.decode(String.self, forKey: .note)
         gender = try c.decodeIfPresent(Gender.self, forKey: .gender) ?? .other
+        petType = try c.decodeIfPresent(PetType.self, forKey: .petType)
     }
 
     var emoji: String {
         switch relationship {
         case .myself: return "⏳"
+        case .pet: return petType?.emoji ?? "🐾"
         case .child:
             switch gender {
             case .male: return "👦"
@@ -189,24 +244,27 @@ struct FamilyMember: Identifiable, Codable {
     var weeksRemaining: Int { max(0, lifeExpectancy * 52 - weeksLived) }
 
     var remainingMoments: Int {
-        if relationship == .myself {
+        switch relationship {
+        case .myself, .pet:
             return weeksRemaining
+        case .child:
+            if let leavesAt = leavesHomeAtAge {
+                let yearsAtHome = max(0.0, Double(leavesAt) - ageInYearsDouble)
+                return Int(yearsAtHome * 52)
+            }
+            return Int(remainingYears * visitFrequency.visitsPerYear)
+        default:
+            return Int(remainingYears * visitFrequency.visitsPerYear)
         }
-        if relationship == .child, let leavesAt = leavesHomeAtAge {
-            let yearsAtHome = max(0.0, Double(leavesAt) - ageInYearsDouble)
-            return Int(yearsAtHome * 52)
-        }
-        return Int(remainingYears * visitFrequency.visitsPerYear)
     }
 
     var remainingMomentsLabel: String {
-        if relationship == .myself {
-            return "weeks remaining in your life"
+        switch relationship {
+        case .myself: return "weeks remaining in your life"
+        case .pet: return "weeks together estimated"
+        case .child where leavesHomeAtAge != nil: return "weekends left at home"
+        default: return visitFrequency.momentLabel + " remaining"
         }
-        if relationship == .child, leavesHomeAtAge != nil {
-            return "weekends left at home"
-        }
-        return visitFrequency.momentLabel + " remaining"
     }
 
     var lifeFractionElapsed: Double {
